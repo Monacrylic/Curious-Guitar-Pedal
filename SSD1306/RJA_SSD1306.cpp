@@ -541,7 +541,7 @@ void OLED::fillCircleHelper(int x0, int y0, int r, int cornername, int delta, bo
 
 void OLED::rectangle(int x0, int y0, int x1, int y1, bool colour)
 {
-	int rectWidth = x1 - x0;
+
 	int rectHeight = y1 - y0;
 
 	line(x0, y0, x1, y1-rectHeight, colour);
@@ -551,7 +551,8 @@ void OLED::rectangle(int x0, int y0, int x1, int y1, bool colour)
 }
 void OLED::rectangle(int x0, int y0, int x1, int y1, bool colour, int lineWidth)
 {
-	int rectWidth = x1 - x0;
+
+
 	int rectHeight = y1 - y0;
 
 	line(x0, y0, x1, y1-rectHeight, colour, lineWidth);

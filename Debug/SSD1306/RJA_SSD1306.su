@@ -26,14 +26,14 @@ RJA_SSD1306.cpp:504:6:void OLED::fillCircle(int, int, int, bool)	40	static
 RJA_SSD1306.cpp:509:6:void OLED::fillCircleHelper(int, int, int, int, int, bool)	56	static
 RJA_SSD1306.cpp:542:6:void OLED::rectangle(int, int, int, int, bool)	48	static
 RJA_SSD1306.cpp:552:6:void OLED::rectangle(int, int, int, int, bool, int)	48	static
-RJA_SSD1306.cpp:563:6:void OLED::fillRect(int, int, int, int, bool)	32	static
-RJA_SSD1306.cpp:568:6:void OLED::connectPoints(int*, int*, int, bool)	56	static
-RJA_SSD1306.cpp:575:6:void OLED::connectPoints(int*, int*, int, bool, int)	56	static
-RJA_SSD1306.cpp:583:6:void OLED::polygon(int*, int*, int, bool)	48	static
-RJA_SSD1306.cpp:588:6:void OLED::polygon(int*, int*, int, bool, int)	48	static
-RJA_SSD1306.cpp:594:6:void OLED::fill(bool)	32	static
-RJA_SSD1306.cpp:604:6:void OLED::fill(int, int, int, int, bool)	40	static
-RJA_SSD1306.cpp:615:6:void OLED::invert()	32	static
-RJA_SSD1306.cpp:625:6:void OLED::invert(int, int, int, int)	40	static
-RJA_SSD1306.cpp:636:6:void OLED::character(int, int, unsigned char, bool, bool, int)	48	static
-RJA_SSD1306.cpp:684:6:void OLED::text(int, int, std::__cxx11::string, bool, bool, int)	56	static
+RJA_SSD1306.cpp:564:6:void OLED::fillRect(int, int, int, int, bool)	32	static
+RJA_SSD1306.cpp:569:6:void OLED::connectPoints(int*, int*, int, bool)	56	static
+RJA_SSD1306.cpp:576:6:void OLED::connectPoints(int*, int*, int, bool, int)	56	static
+RJA_SSD1306.cpp:584:6:void OLED::polygon(int*, int*, int, bool)	48	static
+RJA_SSD1306.cpp:589:6:void OLED::polygon(int*, int*, int, bool, int)	48	static
+RJA_SSD1306.cpp:595:6:void OLED::fill(bool)	32	static
+RJA_SSD1306.cpp:605:6:void OLED::fill(int, int, int, int, bool)	40	static
+RJA_SSD1306.cpp:616:6:void OLED::invert()	32	static
+RJA_SSD1306.cpp:626:6:void OLED::invert(int, int, int, int)	40	static
+RJA_SSD1306.cpp:637:6:void OLED::character(int, int, unsigned char, bool, bool, int)	48	static
+RJA_SSD1306.cpp:685:6:void OLED::text(int, int, std::__cxx11::string, bool, bool, int)	56	static
