@@ -212,20 +212,37 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)== GPIO_PIN_RESET){
-	  effectno += 1;
-	  if (effectno ==3){
-		  effectno=0;
+
+	  if (HAL_GPIO_ReadPin(BRIGHT_GPIO_Port, BRIGHT_Pin) == GPIO_PIN_SET){
+		  HAL_Delay(100);
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  }
-	  OLED1.fill(0);
-	  if(effectno== 1){
-	  OLED1.text(0,20, "Distortion", 1, 0, 2);
+	  else if (HAL_GPIO_ReadPin(BLEFT_GPIO_Port, BLEFT_Pin) == GPIO_PIN_SET){
+		  HAL_Delay(100);
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  }
-	  else if(effectno == 0){
-	  OLED1.text(0,20, "Clean", 1, 0, 2);
+	  else if (HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin) == GPIO_PIN_SET){
+		  HAL_Delay(100);
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  }
-	  else if(effectno == 2){
-	  OLED1.text(0,20, "Zeros", 1, 0, 2);
+	  else if (HAL_GPIO_ReadPin(BDOWN_GPIO_Port, BDOWN_Pin) == GPIO_PIN_SET){
+		  HAL_Delay(100);
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	  }
+	  else if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)== GPIO_PIN_RESET){
+		  effectno += 1;
+		  if (effectno ==3){
+			  effectno=0;
+		  }
+		  OLED1.fill(0);
+		  if(effectno== 1){
+		  OLED1.text(0,20, "Distortion", 1, 0, 2);
+		  }
+		  else if(effectno == 0){
+		  OLED1.text(0,20, "Clean", 1, 0, 2);
+		  }
+		  else if(effectno == 2){
+		  OLED1.text(0,20, "Zeros", 1, 0, 2);
 	  }
 
 	  OLED1.drawFullscreen();
@@ -531,6 +548,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BDOWN_Pin BLEFT_Pin BRIGHT_Pin BUP_Pin */
+  GPIO_InitStruct.Pin = BDOWN_Pin|BLEFT_Pin|BRIGHT_Pin|BUP_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 
