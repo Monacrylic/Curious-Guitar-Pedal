@@ -36,9 +36,9 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 /* Number of samples user accesses per datablock */
-#define DATA_SIZE 2048
+#define DATA_SIZE 128
 /* Total size of the buffer */
-#define FULL_BUFFER_SIZE 4096
+#define FULL_BUFFER_SIZE 256
 
 /* USER CODE END PD */
 
@@ -68,8 +68,8 @@ uint32_t dac_val[FULL_BUFFER_SIZE];
 static volatile uint32_t* inBufPtr;
 static volatile uint32_t* outBufPtr;
 //variable to decide which effect is selected
-bool effectno=0;
-
+uint8_t effectno=0;
+uint16_t distortionThreshold= 400;
 
 /* USER CODE END PV */
 
@@ -104,11 +104,52 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 }
 
 void effectsDSP(){
-
+if (effectno == 0){
 	for (int n=0; n< DATA_SIZE; n++){
 		outBufPtr[n]=inBufPtr[n];
 	}
 }
+else if (effectno == 1)
+{
+	for (int n=0; n< DATA_SIZE; n++){
+		if(inBufPtr[n] >= uint16_t(2048 + distortionThreshold))
+			outBufPtr[n] = distortionThreshold;
+		else if(inBufPtr[n] <= uint16_t(2048 - distortionThreshold))
+			outBufPtr[n] = 2048-distortionThreshold;
+		else
+			outBufPtr[n]=inBufPtr[n];
+	}
+}
+
+else if(effectno ==2){
+	for (int n=0; n< DATA_SIZE; n++){
+		outBufPtr[n]=0;
+	}
+}
+}
+
+/*
+ * __________________UTILITY FUNCTIONS________________________________________
+ */
+
+/*
+ * Map is a improved version of an arduino function
+ * that automatically converts the range of a variable.
+ * This is useful for mapping potentiometer values from 0-255 to 0-100
+ */
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  if ((in_max - in_min) > (out_max - out_min)) {
+    return (x - in_min) * (out_max - out_min+1) / (in_max - in_min+1) + out_min;
+  }
+  else
+  {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  }
+}
+/*
+ * _________________UTILITY FUNCTIONS END_______________________________________
+ */
 /* USER CODE END 0 */
 
 /**
@@ -172,15 +213,21 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)== GPIO_PIN_RESET){
-
+	  effectno += 1;
+	  if (effectno ==3){
+		  effectno=0;
+	  }
 	  OLED1.fill(0);
-	  if(effectno== true){
+	  if(effectno== 1){
 	  OLED1.text(0,20, "Distortion", 1, 0, 2);
 	  }
-	  else if(effectno ==false){
+	  else if(effectno == 0){
 	  OLED1.text(0,20, "Clean", 1, 0, 2);
 	  }
-	  effectno = !effectno;
+	  else if(effectno == 2){
+	  OLED1.text(0,20, "Zeros", 1, 0, 2);
+	  }
+
 	  OLED1.drawFullscreen();
 }
 effectsDSP();
