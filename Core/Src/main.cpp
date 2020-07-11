@@ -104,16 +104,19 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 }
 
 void effectsDSP(){
+	// No -effect, just copy input to output
 if (effectno == 0){
 	for (int n=0; n< DATA_SIZE; n++){
 		outBufPtr[n]=inBufPtr[n];
 	}
 }
-else if (effectno == 1)
+else if (effectno == 1) // Effect 1 is distortion, CLIPPING.
 {
 	for (int n=0; n< DATA_SIZE; n++){
+		//Upper Clipping
 		if(inBufPtr[n] >= uint16_t(2048 + distortionThreshold))
-			outBufPtr[n] = distortionThreshold;
+			outBufPtr[n] = 2048+ distortionThreshold;
+		//Lower Clipping
 		else if(inBufPtr[n] <= uint16_t(2048 - distortionThreshold))
 			outBufPtr[n] = 2048-distortionThreshold;
 		else
@@ -121,7 +124,7 @@ else if (effectno == 1)
 	}
 }
 
-else if(effectno ==2){
+else if(effectno ==2){ //MUTE
 	for (int n=0; n< DATA_SIZE; n++){
 		outBufPtr[n]=0;
 	}
@@ -221,15 +224,12 @@ int main(void)
 		  HAL_Delay(100);
 		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  }
-	  else if (HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin) == GPIO_PIN_SET){
-		  HAL_Delay(100);
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  }
+
 	  else if (HAL_GPIO_ReadPin(BDOWN_GPIO_Port, BDOWN_Pin) == GPIO_PIN_SET){
 		  HAL_Delay(100);
 		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  }
-	  else if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)== GPIO_PIN_RESET){
+	  else if(HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin)== GPIO_PIN_SET){
 		  effectno += 1;
 		  if (effectno ==3){
 			  effectno=0;
@@ -246,6 +246,7 @@ int main(void)
 	  }
 
 	  OLED1.drawFullscreen();
+	  HAL_Delay(200);
 }
 effectsDSP();
 

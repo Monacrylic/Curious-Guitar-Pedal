@@ -2,18 +2,18 @@ gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
 main.cpp:93:6:void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef*)	16	static
 main.cpp:100:6:void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef*)	16	static
 main.cpp:106:6:void effectsDSP()	24	static
-main.cpp:140:6:long int map(long int, long int, long int, long int, long int)	24	static
-main.cpp:159:5:int main()	112	static
-main.cpp:262:6:void SystemClock_Config()	88	static
-main.cpp:306:13:void MX_ADC1_Init()	24	static
-main.cpp:356:13:void MX_DAC_Init()	16	static
-main.cpp:394:13:void MX_I2C1_Init()	8	static
-main.cpp:428:13:void MX_TIM2_Init()	32	static
-main.cpp:473:13:void MX_USART2_UART_Init()	8	static
-main.cpp:504:13:void MX_DMA_Init()	16	static
-main.cpp:526:13:void MX_GPIO_Init()	48	static
-main.cpp:561:6:void splash_screen_OLED(OLED)	16	static
-main.cpp:572:6:void Error_Handler()	4	static
-main.cpp:578:1:void __static_initialization_and_destruction_0(int, int)	16	static
-main.cpp:578:1:cpp)	8	static
-main.cpp:578:1:cpp)	8	static
+main.cpp:143:6:long int map(long int, long int, long int, long int, long int)	24	static
+main.cpp:162:5:int main()	112	static
+main.cpp:263:6:void SystemClock_Config()	88	static
+main.cpp:307:13:void MX_ADC1_Init()	24	static
+main.cpp:357:13:void MX_DAC_Init()	16	static
+main.cpp:395:13:void MX_I2C1_Init()	8	static
+main.cpp:429:13:void MX_TIM2_Init()	32	static
+main.cpp:474:13:void MX_USART2_UART_Init()	8	static
+main.cpp:505:13:void MX_DMA_Init()	16	static
+main.cpp:527:13:void MX_GPIO_Init()	48	static
+main.cpp:562:6:void splash_screen_OLED(OLED)	16	static
+main.cpp:573:6:void Error_Handler()	4	static
+main.cpp:579:1:void __static_initialization_and_destruction_0(int, int)	16	static
+main.cpp:579:1:cpp)	8	static
+main.cpp:579:1:cpp)	8	static
