@@ -61,8 +61,8 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint32_t adc_val[FULL_BUFFER_SIZE];
-uint32_t dac_val[FULL_BUFFER_SIZE];
+volatile uint32_t adc_val[FULL_BUFFER_SIZE];
+volatile uint32_t dac_val[FULL_BUFFER_SIZE];
 
 // Pointer to the half buffer which should be processed
 static volatile uint32_t* inBufPtr;
@@ -70,7 +70,8 @@ static volatile uint32_t* outBufPtr;
 //variable to decide which effect is selected
 uint8_t effectno=0;
 uint16_t distortionThreshold= 400;
-
+uint8_t volumeUI= 50;
+uint32_t volume= 2048;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,11 +104,44 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	outBufPtr = &dac_val[0];
 }
 
+
+/*
+ * __________________UTILITY FUNCTIONS________________________________________
+ */
+
+/*
+ * Map is a improved version of an arduino function
+ * that automatically converts the range of a variable.
+ * This is useful for mapping potentiometer values from 0-255 to 0-100
+ */
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  if ((in_max - in_min) > (out_max - out_min)) {
+    return (x - in_min) * (out_max - out_min+1) / (in_max - in_min+1) + out_min;
+  }
+  else
+  {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  }
+}
+
+uint32_t mapval(uint32_t input, uint32_t input_start, uint32_t input_end,uint32_t input_offset, uint32_t output_start, uint32_t output_end)
+{
+	uint32_t slope = (output_end - output_start) / (input_end - input_start);
+	uint32_t output_zero=  output_start + slope * (input_offset - input_start);
+	uint32_t output = 2048- output_zero+ output_start + slope * (input - input_start);
+	return output;
+}
+/*
+ * _________________UTILITY FUNCTIONS END_______________________________________
+ */
+
 void effectsDSP(){
 	// No -effect, just copy input to output
 if (effectno == 0){
 	for (int n=0; n< DATA_SIZE; n++){
-		outBufPtr[n]=inBufPtr[n];
+		outBufPtr[n]=mapval(inBufPtr[n], 0, 4096, 2048, 0 , volume);
+
 	}
 }
 else if (effectno == 1) // Effect 1 is distortion, CLIPPING.
@@ -131,28 +165,6 @@ else if(effectno ==2){ //MUTE
 }
 }
 
-/*
- * __________________UTILITY FUNCTIONS________________________________________
- */
-
-/*
- * Map is a improved version of an arduino function
- * that automatically converts the range of a variable.
- * This is useful for mapping potentiometer values from 0-255 to 0-100
- */
-long map(long x, long in_min, long in_max, long out_min, long out_max)
-{
-  if ((in_max - in_min) > (out_max - out_min)) {
-    return (x - in_min) * (out_max - out_min+1) / (in_max - in_min+1) + out_min;
-  }
-  else
-  {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-  }
-}
-/*
- * _________________UTILITY FUNCTIONS END_______________________________________
- */
 /* USER CODE END 0 */
 
 /**
@@ -200,6 +212,8 @@ int main(void)
 
   if(HAL_I2C_IsDeviceReady(&hi2c1, OLED1.getCAddress(), 1, 10)== HAL_OK){
 	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  HAL_Delay(100);
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
   }
 
   OLED1.init(&hi2c1);
@@ -216,19 +230,28 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+/*-------------------------------------USER INTERFACE-------------------------------
+ * All buttons and OLED updates happen in this block
+ ***********************************************************************************/
 	  if (HAL_GPIO_ReadPin(BRIGHT_GPIO_Port, BRIGHT_Pin) == GPIO_PIN_SET){
-		  HAL_Delay(100);
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		  volumeUI++;
+		  volume= (volumeUI/100) * 4096;
+		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+		  OLED1.drawFullscreen();
+		  HAL_Delay(200);
 	  }
 	  else if (HAL_GPIO_ReadPin(BLEFT_GPIO_Port, BLEFT_Pin) == GPIO_PIN_SET){
-		  HAL_Delay(100);
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		  volumeUI--;
+		  volume= (volumeUI/100) * 4096;
+		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+		  OLED1.drawFullscreen();
+		  HAL_Delay(200);
 	  }
-
-	  else if (HAL_GPIO_ReadPin(BDOWN_GPIO_Port, BDOWN_Pin) == GPIO_PIN_SET){
-		  HAL_Delay(100);
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  }
+// The pcb has a wrong connection in the present version, will correct in next iteration
+//	  else if (HAL_GPIO_ReadPin(BDOWN_GPIO_Port, BDOWN_Pin) == GPIO_PIN_SET){
+//		  HAL_Delay(100);
+//		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+//	  }
 	  else if(HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin)== GPIO_PIN_SET){
 		  effectno += 1;
 		  if (effectno ==3){
@@ -239,7 +262,9 @@ int main(void)
 		  OLED1.text(0,20, "Distortion", 1, 0, 2);
 		  }
 		  else if(effectno == 0){
-		  OLED1.text(0,20, "Clean", 1, 0, 2);
+		  OLED1.text(0,5, "Clean", 1, 0, 2);
+		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+
 		  }
 		  else if(effectno == 2){
 		  OLED1.text(0,20, "Zeros", 1, 0, 2);
@@ -247,8 +272,11 @@ int main(void)
 
 	  OLED1.drawFullscreen();
 	  HAL_Delay(200);
-}
-effectsDSP();
+	  }
+
+	 /* ************************************************************************************/
+
+	  effectsDSP(); // Process the audio
 
 
 
@@ -550,8 +578,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BDOWN_Pin BLEFT_Pin BRIGHT_Pin BUP_Pin */
-  GPIO_InitStruct.Pin = BDOWN_Pin|BLEFT_Pin|BRIGHT_Pin|BUP_Pin;
+  /*Configure GPIO pins : BLEFT_Pin BRIGHT_Pin BUP_Pin */
+  GPIO_InitStruct.Pin = BLEFT_Pin|BRIGHT_Pin|BUP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
