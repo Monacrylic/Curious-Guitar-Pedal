@@ -67,11 +67,11 @@ volatile uint32_t dac_val[FULL_BUFFER_SIZE];
 // Pointer to the half buffer which should be processed
 static volatile uint32_t* inBufPtr;
 static volatile uint32_t* outBufPtr;
-//variable to decide which effect is selected
-uint8_t effectno=0;
-uint16_t distortionThreshold= 400;
-uint8_t volumeUI= 50;
-uint32_t volume= 2048;
+
+static int prescaler= 5;
+static float adc_sample;
+static float modified_sample;
+static float effect_sample;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,44 +125,25 @@ long map(long x, long in_min, long in_max, long out_min, long out_max)
   }
 }
 
-uint32_t mapval(uint32_t input, uint32_t input_start, uint32_t input_end,uint32_t input_offset, uint32_t output_start, uint32_t output_end)
-{
-	uint32_t slope = (output_end - output_start) / (input_end - input_start);
-	uint32_t output_zero=  output_start + slope * (input_offset - input_start);
-	uint32_t output = 2048- output_zero+ output_start + slope * (input - input_start);
-	return output;
-}
+
 /*
  * _________________UTILITY FUNCTIONS END_______________________________________
  */
 
 void effectsDSP(){
 	// No -effect, just copy input to output
-if (effectno == 0){
 	for (int n=0; n< DATA_SIZE; n++){
-		outBufPtr[n]=mapval(inBufPtr[n], 0, 4096, 2048, 0 , volume);
+		adc_sample = inBufPtr[n] / 4096.0f ;
+		adc_sample += 0.0126953f;
+		if(adc_sample< 0.501 && adc_sample >  0.499)
+				adc_sample = 0.5;
+		modified_sample= (adc_sample-0.5) / prescaler;
+		modified_sample -= 0.0126953f;
+		modified_sample= (modified_sample+ 0.5) * 4096.0f;
+	    outBufPtr[n] =uint32_t( modified_sample);
+		}
 
-	}
-}
-else if (effectno == 1) // Effect 1 is distortion, CLIPPING.
-{
-	for (int n=0; n< DATA_SIZE; n++){
-		//Upper Clipping
-		if(inBufPtr[n] >= uint16_t(2048 + distortionThreshold))
-			outBufPtr[n] = 2048+ distortionThreshold;
-		//Lower Clipping
-		else if(inBufPtr[n] <= uint16_t(2048 - distortionThreshold))
-			outBufPtr[n] = 2048-distortionThreshold;
-		else
-			outBufPtr[n]=inBufPtr[n];
-	}
-}
 
-else if(effectno ==2){ //MUTE
-	for (int n=0; n< DATA_SIZE; n++){
-		outBufPtr[n]=0;
-	}
-}
 }
 
 /* USER CODE END 0 */
@@ -234,41 +215,32 @@ int main(void)
  * All buttons and OLED updates happen in this block
  ***********************************************************************************/
 	  if (HAL_GPIO_ReadPin(BRIGHT_GPIO_Port, BRIGHT_Pin) == GPIO_PIN_SET){
-		  volumeUI++;
-		  volume= (volumeUI/100) * 4096;
-		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+		  if(prescaler<3000){
+		  prescaler+=10;
+
+		  OLED1.text(0,20, "PS: " + to_string(prescaler), 1, 0, 2);
 		  OLED1.drawFullscreen();
-		  HAL_Delay(200);
+		  HAL_Delay(200);}
 	  }
 	  else if (HAL_GPIO_ReadPin(BLEFT_GPIO_Port, BLEFT_Pin) == GPIO_PIN_SET){
-		  volumeUI--;
-		  volume= (volumeUI/100) * 4096;
-		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+		  if(prescaler>2){
+		  prescaler-=10;
+
+		  OLED1.text(0,20, "PS: " + to_string(prescaler), 1, 0, 2);
+
 		  OLED1.drawFullscreen();
 		  HAL_Delay(200);
+		  }
 	  }
 // The pcb has a wrong connection in the present version, will correct in next iteration
 //	  else if (HAL_GPIO_ReadPin(BDOWN_GPIO_Port, BDOWN_Pin) == GPIO_PIN_SET){
 //		  HAL_Delay(100);
 //		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 //	  }
-	  else if(HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin)== GPIO_PIN_SET){
-		  effectno += 1;
-		  if (effectno ==3){
-			  effectno=0;
-		  }
-		  OLED1.fill(0);
-		  if(effectno== 1){
-		  OLED1.text(0,20, "Distortion", 1, 0, 2);
-		  }
-		  else if(effectno == 0){
-		  OLED1.text(0,5, "Clean", 1, 0, 2);
-		  OLED1.text(0,20, "Vol: " + to_string(volumeUI), 1, 0, 2);
+     else if(HAL_GPIO_ReadPin(BUP_GPIO_Port, BUP_Pin)== GPIO_PIN_SET){
 
-		  }
-		  else if(effectno == 2){
-		  OLED1.text(0,20, "Zeros", 1, 0, 2);
-	  }
+	  OLED1.text(0,5, "Clean", 1, 0, 2);
+	  OLED1.text(0,40, "inbuf: " + to_string(inBufPtr[0]), 1, 0, 2);
 
 	  OLED1.drawFullscreen();
 	  HAL_Delay(200);
@@ -366,7 +338,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
